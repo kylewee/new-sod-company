@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sod.Company Issue Tracker</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #2d7a3a; margin-bottom: 20px; }
+
+        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .stat-card h3 { font-size: 0.9rem; color: #666; margin-bottom: 5px; }
+        .stat-card .number { font-size: 2rem; font-weight: bold; }
+        .stat-card.green .number { color: #2d7a3a; }
+        .stat-card.yellow .number { color: #f59e0b; }
+        .stat-card.red .number { color: #dc2626; }
+
+        .section { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .section h2 { color: #333; margin-bottom: 15px; font-size: 1.2rem; }
+
+        .alert-list { list-style: none; }
+        .alert-item { padding: 12px; border-left: 4px solid; margin-bottom: 10px; background: #fafafa; }
+        .alert-item.critical { border-color: #dc2626; }
+        .alert-item.warning { border-color: #f59e0b; }
+        .alert-item.info { border-color: #3b82f6; }
+        .alert-item .time { font-size: 0.8rem; color: #666; }
+        .alert-item .action { margin-top: 8px; }
+        .alert-item button { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+        .btn-resolve { background: #2d7a3a; color: white; }
+        .btn-escalate { background: #dc2626; color: white; }
+        .btn-call { background: #3b82f6; color: white; }
+
+        .job-list { width: 100%; border-collapse: collapse; }
+        .job-list th, .job-list td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        .job-list th { background: #f8f8f8; font-weight: 600; }
+        .status { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
+        .status.scheduled { background: #dbeafe; color: #1e40af; }
+        .status.in-progress { background: #fef3c7; color: #92400e; }
+        .status.completed { background: #d1fae5; color: #065f46; }
+        .status.issue { background: #fee2e2; color: #991b1b; }
+
+        .pulse-score { display: inline-block; width: 30px; height: 30px; border-radius: 50%; text-align: center; line-height: 30px; font-weight: bold; color: white; }
+        .pulse-5 { background: #22c55e; }
+        .pulse-4 { background: #84cc16; }
+        .pulse-3 { background: #f59e0b; }
+        .pulse-2 { background: #f97316; }
+        .pulse-1 { background: #dc2626; }
+
+        .add-form { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .add-form input, .add-form select { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        .add-form button { grid-column: span 2; padding: 12px; background: #2d7a3a; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+
+        .log-entry { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+        .log-entry .message { flex: 1; }
+        .log-entry .timestamp { color: #666; font-size: 0.85rem; }
+
+        @media (max-width: 600px) {
+            .add-form { grid-template-columns: 1fr; }
+            .add-form button { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sod.Company Issue Tracker</h1>
+
+        <!-- Dashboard Stats -->
+        <div class="dashboard">
+            <div class="stat-card green">
+                <h3>Active Jobs</h3>
+                <div class="number" id="activeJobs">0</div>
+            </div>
+            <div class="stat-card yellow">
+                <h3>Pending Issues</h3>
+                <div class="number" id="pendingIssues">0</div>
+            </div>
+            <div class="stat-card red">
+                <h3>Critical Alerts</h3>
+                <div class="number" id="criticalAlerts">0</div>
+            </div>
+            <div class="stat-card green">
+                <h3>Avg Satisfaction</h3>
+                <div class="number" id="avgSatisfaction">-</div>
+            </div>
+        </div>
+
+        <!-- Active Alerts -->
+        <div class="section">
+            <h2>Active Alerts</h2>
+            <ul class="alert-list" id="alertList">
+                <li class="alert-item info">
+                    <strong>No active alerts</strong>
+                    <div class="time">System monitoring active</div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Today's Jobs -->
+        <div class="section">
+            <h2>Today's Jobs</h2>
+            <table class="job-list" id="jobList">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>City</th>
+                        <th>Status</th>
+                        <th>Crew</th>
+                        <th>Pulse</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="6" style="text-align:center; color:#666;">No jobs scheduled today</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Log Issue -->
+        <div class="section">
+            <h2>Log New Issue</h2>
+            <form class="add-form" id="issueForm">
+                <input type="text" placeholder="Customer Name" id="customerName" required>
+                <input type="text" placeholder="Phone" id="customerPhone" required>
+                <input type="text" placeholder="City" id="customerCity" required>
+                <select id="issueType" required>
+                    <option value="">Select Issue Type</option>
+                    <option value="response_delay">Slow Response</option>
+                    <option value="crew_late">Crew Running Late</option>
+                    <option value="sod_quality">Sod Quality Concern</option>
+                    <option value="customer_complaint">Customer Complaint</option>
+                    <option value="sod_dying">Sod Not Rooting</option>
+                    <option value="property_damage">Property Damage</option>
+                    <option value="billing">Billing Issue</option>
+                    <option value="other">Other</option>
+                </select>
+                <select id="severity" required>
+                    <option value="">Severity</option>
+                    <option value="low">Low - Minor concern</option>
+                    <option value="medium">Medium - Needs attention</option>
+                    <option value="high">High - Urgent</option>
+                    <option value="critical">Critical - Immediate action</option>
+                </select>
+                <input type="text" placeholder="Brief description" id="issueDescription" required>
+                <button type="submit">Log Issue</button>
+            </form>
+        </div>
+
+        <!-- Issue Log -->
+        <div class="section">
+            <h2>Recent Activity Log</h2>
+            <div id="activityLog">
+                <div class="log-entry">
+                    <span class="message">System initialized</span>
+                    <span class="timestamp" id="initTime"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize
+        document.getElementById('initTime').textContent = new Date().toLocaleString();
+
+        // Storage
+        let issues = JSON.parse(localStorage.getItem('sodIssues') || '[]');
+        let jobs = JSON.parse(localStorage.getItem('sodJobs') || '[]');
+
+        // Update dashboard
+        function updateDashboard() {
+            const activeJobs = jobs.filter(j => j.status !== 'completed').length;
+            const pendingIssues = issues.filter(i => !i.resolved).length;
+            const criticalAlerts = issues.filter(i => !i.resolved && (i.severity === 'critical' || i.severity === 'high')).length;
+
+            document.getElementById('activeJobs').textContent = activeJobs;
+            document.getElementById('pendingIssues').textContent = pendingIssues;
+            document.getElementById('criticalAlerts').textContent = criticalAlerts;
+
+            // Update alerts
+            updateAlerts();
+        }
+
+        function updateAlerts() {
+            const alertList = document.getElementById('alertList');
+            const unresolvedIssues = issues.filter(i => !i.resolved).sort((a, b) => {
+                const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+                return severityOrder[a.severity] - severityOrder[b.severity];
+            });
+
+            if (unresolvedIssues.length === 0) {
+                alertList.innerHTML = `
+                    <li class="alert-item info">
+                        <strong>No active alerts</strong>
+                        <div class="time">System monitoring active</div>
+                    </li>
+                `;
+                return;
+            }
+
+            alertList.innerHTML = unresolvedIssues.map((issue, index) => {
+                const alertClass = issue.severity === 'critical' || issue.severity === 'high' ? 'critical' :
+                                   issue.severity === 'medium' ? 'warning' : 'info';
+                return `
+                    <li class="alert-item ${alertClass}">
+                        <strong>${issue.customerName} - ${issue.issueType.replace('_', ' ').toUpperCase()}</strong>
+                        <div>${issue.description}</div>
+                        <div class="time">${issue.city} | Logged: ${new Date(issue.timestamp).toLocaleString()}</div>
+                        <div class="action">
+                            <button class="btn-call" onclick="callCustomer('${issue.phone}')">Call</button>
+                            <button class="btn-resolve" onclick="resolveIssue(${index})">Mark Resolved</button>
+                            ${issue.severity !== 'critical' ? `<button class="btn-escalate" onclick="escalateIssue(${index})">Escalate</button>` : ''}
+                        </div>
+                    </li>
+                `;
+            }).join('');
+        }
+
+        function callCustomer(phone) {
+            window.open(`tel:${phone}`);
+            addLog(`Initiated call to ${phone}`);
+        }
+
+        function resolveIssue(index) {
+            const unresolvedIssues = issues.filter(i => !i.resolved);
+            const issue = unresolvedIssues[index];
+            const originalIndex = issues.findIndex(i => i.timestamp === issue.timestamp);
+            issues[originalIndex].resolved = true;
+            issues[originalIndex].resolvedAt = new Date().toISOString();
+            localStorage.setItem('sodIssues', JSON.stringify(issues));
+            addLog(`Resolved issue for ${issue.customerName}`);
+            updateDashboard();
+        }
+
+        function escalateIssue(index) {
+            const unresolvedIssues = issues.filter(i => !i.resolved);
+            const issue = unresolvedIssues[index];
+            const originalIndex = issues.findIndex(i => i.timestamp === issue.timestamp);
+            issues[originalIndex].severity = 'critical';
+            localStorage.setItem('sodIssues', JSON.stringify(issues));
+            addLog(`ESCALATED issue for ${issue.customerName} to CRITICAL`);
+            updateDashboard();
+        }
+
+        function addLog(message) {
+            const log = document.getElementById('activityLog');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `
+                <span class="message">${message}</span>
+                <span class="timestamp">${new Date().toLocaleString()}</span>
+            `;
+            log.insertBefore(entry, log.firstChild);
+        }
+
+        // Form submission
+        document.getElementById('issueForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const issue = {
+                customerName: document.getElementById('customerName').value,
+                phone: document.getElementById('customerPhone').value,
+                city: document.getElementById('customerCity').value,
+                issueType: document.getElementById('issueType').value,
+                severity: document.getElementById('severity').value,
+                description: document.getElementById('issueDescription').value,
+                timestamp: new Date().toISOString(),
+                resolved: false
+            };
+
+            issues.unshift(issue);
+            localStorage.setItem('sodIssues', JSON.stringify(issues));
+
+            addLog(`New ${issue.severity.toUpperCase()} issue logged: ${issue.customerName} - ${issue.issueType}`);
+
+            this.reset();
+            updateDashboard();
+
+            if (issue.severity === 'critical' || issue.severity === 'high') {
+                alert(`URGENT: ${issue.severity.toUpperCase()} issue logged!\n\nCustomer: ${issue.customerName}\nPhone: ${issue.phone}\n\nCall immediately!`);
+            }
+        });
+
+        // Initialize dashboard
+        updateDashboard();
+    </script>
+</body>
+</html>
