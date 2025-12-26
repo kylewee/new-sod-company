@@ -1,0 +1,42 @@
+{
+  "pricing_engine": {
+    "description": "Change these 3 numbers to update ALL pricing across all pages",
+
+    "sod_cost_per_sqft": {
+      "St. Augustine": 0.45,
+      "Zoysia": 0.50,
+      "Bermuda": 0.38,
+      "Bahia": 0.35,
+      "Centipede": 0.40,
+      "Fescue": 0.42
+    },
+
+    "install_labor_per_sqft": 0.40,
+
+    "delivery": {
+      "base_fee": 75,
+      "per_pallet": 15
+    },
+
+    "sqft_per_pallet": 450,
+
+    "master_controls": {
+      "sod_multiplier": 1.0,
+      "labor_multiplier": 1.0,
+      "delivery_multiplier": 1.0
+    }
+  },
+
+  "pallet_pricing": {
+    "description": "Pre-calculated pricing for 1-20 pallets by grass type",
+    "note": "Regenerate pages after changing master_controls"
+  },
+
+  "lead_values": {
+    "base_value": 30,
+    "premium_grass_bonus": 5,
+    "large_lawn_bonus": 10,
+    "premium_city_bonus": 10,
+    "premium_cities": ["Naples", "Boca Raton", "Scottsdale", "Los Angeles", "San Diego"]
+  }
+}

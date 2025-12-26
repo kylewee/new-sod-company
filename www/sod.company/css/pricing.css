@@ -1,0 +1,115 @@
+/* Pricing Page Styles */
+
+.pricing-content {
+    padding: 40px 20px;
+}
+
+.pricing-intro {
+    max-width: 700px;
+    margin: 0 auto 40px;
+    text-align: center;
+}
+
+.pricing-section {
+    margin-bottom: 50px;
+}
+
+.pricing-section h3 {
+    color: var(--primary-green);
+    margin-bottom: 20px;
+    font-size: 1.4rem;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--light-green);
+}
+
+/* Pricing Table */
+.pricing-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--white);
+    box-shadow: var(--shadow);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.pricing-table thead {
+    background: var(--primary-green);
+    color: var(--white);
+}
+
+.pricing-table th {
+    padding: 15px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.pricing-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.pricing-table tbody tr:hover {
+    background: var(--light-green);
+}
+
+.pricing-table .total {
+    color: var(--primary-green);
+    font-size: 1.1rem;
+}
+
+/* Pricing Notes */
+.pricing-notes {
+    margin-top: 50px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.pricing-notes h3 {
+    color: var(--text-dark);
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+.pricing-notes ul {
+    list-style: none;
+}
+
+.pricing-notes li {
+    padding: 8px 0;
+    padding-left: 25px;
+    position: relative;
+    color: var(--text-medium);
+}
+
+.pricing-notes li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--primary-green);
+    font-weight: bold;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .pricing-table {
+        font-size: 0.85rem;
+    }
+
+    .pricing-table th,
+    .pricing-table td {
+        padding: 10px 6px;
+    }
+
+    .pricing-section h3 {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 500px) {
+    .pricing-table {
+        display: block;
+        overflow-x: auto;
+    }
+}
