@@ -21,15 +21,17 @@ client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 # SMS Templates
 TEMPLATES = {
-    "day0": """Hi {name}! Thanks for choosing Sod.Company today. If you love your new lawn, a quick Google review would mean the world: {link}
+    "day0": """Hi {name}! Thanks for choosing Sod.Company today. Quick question - how's your new lawn looking? Reply 1-5 (5 = love it!)""",
 
-- The Sod.Company Team""",
+    "day3_pulse": """Hey {name}, quick check-in! How's the lawn? Reply 1-5 (5 = perfect)""",
 
-    "day3": """Hey {name}, hope you're loving the new lawn! If you have 30 seconds, a review helps other {city} homeowners find us: {link}""",
+    "day3_review": """Awesome! Glad you love it. Would you mind leaving a quick Google review? {link}""",
 
-    "day7": """Last ask, promise! If you're happy with your lawn, we'd appreciate a review: {link}
+    "day7_pulse": """Hi {name}, one week check-in! How's everything? Reply 1-5""",
 
-Thanks again for choosing us! 🌱"""
+    "day7_review": """Thanks! A quick review helps other {city} homeowners find us: {link}""",
+
+    "low_score_alert": """Thanks for the feedback. We'll call you shortly to make this right."""
 }
 
 
@@ -156,12 +158,12 @@ def opt_out(phone):
 
 
 def process_scheduled_messages():
-    """Process all scheduled review requests"""
+    """Process all scheduled messages (pulse checks + review requests)"""
     data = load_customers()
     today = datetime.now().date()
 
     print(f"\n{'='*50}")
-    print(f"Processing review requests - {today}")
+    print(f"Processing messages - {today}")
     print(f"{'='*50}\n")
 
     sent_count = 0
@@ -170,34 +172,68 @@ def process_scheduled_messages():
         if customer["opted_out"] or customer["reviewed"]:
             continue
 
-        # Skip if pulse score is low (< 4)
-        if customer["pulse_score"] and customer["pulse_score"] < 4:
-            continue
-
         install_date = datetime.strptime(customer["install_date"], "%Y-%m-%d").date()
         days_since = (today - install_date).days
 
         print(f"\n{customer['name']} ({customer['city']}) - Day {days_since}")
 
-        # Day 0: Same day evening (run after 6 PM)
+        # Day 0: Evening pulse check
         if days_since == 0 and "day0" not in customer["sms_sent"]:
             if send_review_request(customer, "day0"):
                 sent_count += 1
 
-        # Day 3
-        elif days_since == 3 and "day3" not in customer["sms_sent"]:
-            if send_review_request(customer, "day3"):
+        # Day 3: Pulse check first
+        elif days_since == 3 and "day3_pulse" not in customer["sms_sent"]:
+            if send_review_request(customer, "day3_pulse"):
                 sent_count += 1
 
-        # Day 7
-        elif days_since == 7 and "day7" not in customer["sms_sent"]:
-            if send_review_request(customer, "day7"):
+        # Day 7: Pulse check first
+        elif days_since == 7 and "day7_pulse" not in customer["sms_sent"]:
+            if send_review_request(customer, "day7_pulse"):
                 sent_count += 1
 
     save_customers(data)
     print(f"\n{'='*50}")
-    print(f"Sent {sent_count} review requests")
+    print(f"Sent {sent_count} messages")
     print(f"{'='*50}\n")
+
+
+def handle_reply(phone, score):
+    """Handle customer's pulse score reply and send appropriate follow-up"""
+    data = load_customers()
+
+    for customer in data["customers"]:
+        if customer["phone"] == phone:
+            customer["pulse_score"] = score
+
+            if score >= 4:
+                # Happy customer - send review request
+                link = get_review_link(customer["city"])
+                if "day3_pulse" in customer["sms_sent"] and "day3_review" not in customer["sms_sent"]:
+                    msg = TEMPLATES["day3_review"].format(
+                        name=customer["name"].split()[0],
+                        city=customer["city"].title(),
+                        link=link
+                    )
+                    send_sms(phone, msg)
+                    customer["sms_sent"].append("day3_review")
+                elif "day7_pulse" in customer["sms_sent"] and "day7_review" not in customer["sms_sent"]:
+                    msg = TEMPLATES["day7_review"].format(
+                        name=customer["name"].split()[0],
+                        city=customer["city"].title(),
+                        link=link
+                    )
+                    send_sms(phone, msg)
+                    customer["sms_sent"].append("day7_review")
+                print(f"✓ {customer['name']} scored {score} - review request sent")
+            else:
+                # Unhappy customer - alert and acknowledge
+                send_sms(phone, TEMPLATES["low_score_alert"])
+                print(f"⚠️  ALERT: {customer['name']} scored {score} - CALL NOW: {phone}")
+
+            save_customers(data)
+            return True
+    return False
 
 
 def list_customers():
@@ -221,15 +257,22 @@ if __name__ == "__main__":
 
     if len(sys.argv) < 2:
         print("""
-SMS Review Request System
+SMS Review System (Pulse-First)
 
 Usage:
   python review_sms.py add "John Smith" "+15551234567" "Houston"
-  python review_sms.py pulse "+15551234567" 5
-  python review_sms.py reviewed "+15551234567"
-  python review_sms.py optout "+15551234567"
-  python review_sms.py send              # Process all scheduled messages
-  python review_sms.py list              # List all customers
+  python review_sms.py reply "+15551234567" 5    # Customer replied with score
+  python review_sms.py reviewed "+15551234567"   # Customer left review
+  python review_sms.py optout "+15551234567"     # Stop messaging
+  python review_sms.py send                      # Process scheduled messages
+  python review_sms.py list                      # List all customers
+
+Flow:
+  Day 0: "How's your lawn? Reply 1-5"
+  Day 3: "Quick check-in! Reply 1-5"
+         → If 4-5: Send review link
+         → If 1-3: Alert you, no review request
+  Day 7: Final check if no response
         """)
         sys.exit(0)
 
@@ -238,8 +281,8 @@ Usage:
     if command == "add" and len(sys.argv) >= 5:
         add_customer(sys.argv[2], sys.argv[3], sys.argv[4])
 
-    elif command == "pulse" and len(sys.argv) >= 4:
-        update_pulse_score(sys.argv[2], int(sys.argv[3]))
+    elif command == "reply" and len(sys.argv) >= 4:
+        handle_reply(sys.argv[2], int(sys.argv[3]))
 
     elif command == "reviewed" and len(sys.argv) >= 3:
         mark_reviewed(sys.argv[2])
