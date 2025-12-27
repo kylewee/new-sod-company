@@ -140,7 +140,7 @@ def get_city_template(city_data):
     <meta property="og:description" content="Professional sod installation in {city}. {primary_grass} sod starting at {avg_price}/sqft installed. Free quotes, same-week service.">
     <meta property="og:url" content="https://sod.company/{state_slug}/{city_slug}/">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="https://sod.company/images/og-sod-installation.jpg">
+    <meta property="og:image" content="https://sod.company/images/og-sod-installation.png">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
@@ -462,7 +462,7 @@ def get_pricing_page_template(city_data):
     <meta property="og:description" content="Sod installation prices in {city}. {primary_grass} sod from $0.85/sqft installed. Complete pricing table.">
     <meta property="og:url" content="https://sod.company/{state_slug}/{city_slug}/prices/">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="https://sod.company/images/og-sod-installation.jpg">
+    <meta property="og:image" content="https://sod.company/images/og-sod-installation.png">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
