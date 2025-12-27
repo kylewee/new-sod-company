@@ -478,3 +478,37 @@ footer {
         text-align: center;
     }
 }
+
+/* Nearby Cities Section */
+.nearby-cities {
+    padding: 40px 0;
+    background: var(--light-green);
+}
+
+.nearby-cities h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--dark-green);
+}
+
+.city-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.city-links a {
+    background: var(--white);
+    color: var(--primary-green);
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    border: 1px solid var(--primary-green);
+    transition: all 0.2s ease;
+}
+
+.city-links a:hover {
+    background: var(--primary-green);
+    color: var(--white);
+}

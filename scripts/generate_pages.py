@@ -22,6 +22,17 @@ with open(data_dir / 'cities.json') as f:
 with open(data_dir / 'pricing.json') as f:
     pricing_data = json.load(f)
 
+def get_nearby_cities(current_city, state, max_cities=6):
+    """Get other cities in the same state for internal linking"""
+    nearby = []
+    for c in cities:
+        if c['state'] == state and c['city'] != current_city:
+            nearby.append(c)
+        if len(nearby) >= max_cities:
+            break
+    return nearby
+
+
 def calculate_price(grass_type, pallets):
     """Calculate total installed price for given grass type and pallet count"""
     engine = pricing_data['pricing_engine']
@@ -98,6 +109,13 @@ def get_city_template(city_data):
     city_slug = city.lower().replace(' ', '-').replace('.', '')
     state_slug = state.lower()
 
+    # Get nearby cities for internal linking
+    nearby = get_nearby_cities(city, state)
+    nearby_links = ''.join([
+        f'<a href="/{c["state"].lower()}/{c["city"].lower().replace(" ", "-").replace(".", "")}/">{c["city"]}</a>'
+        for c in nearby
+    ])
+
     grass_options = ''.join([f'<option value="{g}">{g}</option>' for g in grasses])
 
     return f'''<!DOCTYPE html>
@@ -109,6 +127,19 @@ def get_city_template(city_data):
     <meta name="description" content="Professional sod installation in {city}, {state_full}. {primary_grass}, {', '.join(grasses[:2])} sod starting at {avg_price}/sqft installed. Free quotes, same-week service. Call {phone}">
     <meta name="keywords" content="sod installation {city}, {primary_grass} sod {city}, lawn installation {city}, sod prices {city} {state}">
     <link rel="canonical" href="https://sod.company/{state_slug}/{city_slug}/">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Sod Installation {city}, {state_full} | Sod.Company">
+    <meta property="og:description" content="Professional sod installation in {city}. {primary_grass} sod starting at {avg_price}/sqft installed. Free quotes, same-week service.">
+    <meta property="og:url" content="https://sod.company/{state_slug}/{city_slug}/">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://sod.company/images/og-sod-installation.jpg">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Sod Installation {city} | Sod.Company">
+    <meta name="twitter:description" content="{primary_grass} sod installation in {city} starting at {avg_price}/sqft.">
+
     <link rel="stylesheet" href="/css/main.css">
 
     <!-- Schema Markup -->
@@ -128,6 +159,40 @@ def get_city_template(city_data):
         }},
         "priceRange": "$$",
         "areaServed": "{city}, {state_full}"
+    }}
+    </script>
+
+    <!-- FAQ Schema -->
+    <script type="application/ld+json">
+    {{
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {{
+                "@type": "Question",
+                "name": "How much does sod installation cost in {city}?",
+                "acceptedAnswer": {{
+                    "@type": "Answer",
+                    "text": "Sod installation in {city} typically costs {avg_price} per square foot installed, including material, labor, and delivery. For a 5,000 sqft lawn, expect $4,250 - $5,500 total."
+                }}
+            }},
+            {{
+                "@type": "Question",
+                "name": "What is the best grass for {city}?",
+                "acceptedAnswer": {{
+                    "@type": "Answer",
+                    "text": "{primary_grass} is the most popular choice in {city} due to its excellent adaptation to local climate and soil conditions."
+                }}
+            }},
+            {{
+                "@type": "Question",
+                "name": "How long does sod installation take?",
+                "acceptedAnswer": {{
+                    "@type": "Answer",
+                    "text": "Most residential sod installations in {city} are completed in one day. A typical 5,000 sqft lawn takes 4-6 hours to install."
+                }}
+            }}
+        ]
     }}
     </script>
 </head>
@@ -310,6 +375,15 @@ def get_city_template(city_data):
         </div>
     </section>
 
+    <section class="nearby-cities">
+        <div class="container">
+            <h2>Sod Installation in Other {state_full} Cities</h2>
+            <div class="city-links">
+                {nearby_links}
+            </div>
+        </div>
+    </section>
+
     <footer>
         <div class="container">
             <div class="footer-content">
@@ -375,6 +449,19 @@ def get_pricing_page_template(city_data):
     <meta name="description" content="Sod installation prices in {city}, {state_full}. {primary_grass} sod from $0.85/sqft installed. See our complete pricing table for 1-10 pallets. Call {phone}">
     <meta name="keywords" content="sod prices {city}, {primary_grass} sod cost, lawn installation prices {city} {state}">
     <link rel="canonical" href="https://sod.company/{state_slug}/{city_slug}/prices/">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Sod Prices {city} {state} | Sod.Company">
+    <meta property="og:description" content="Sod installation prices in {city}. {primary_grass} sod from $0.85/sqft installed. Complete pricing table.">
+    <meta property="og:url" content="https://sod.company/{state_slug}/{city_slug}/prices/">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://sod.company/images/og-sod-installation.jpg">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Sod Prices {city} | Sod.Company">
+    <meta name="twitter:description" content="{primary_grass} sod installation prices in {city}. See full pricing table.">
+
     <link rel="stylesheet" href="/css/main.css">
     <link rel="stylesheet" href="/css/pricing.css">
 </head>
