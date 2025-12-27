@@ -1,5 +1,25 @@
 // Sod.Company - Main JavaScript
 
+// Lazy load images with native loading attribute fallback
+if ('loading' in HTMLImageElement.prototype) {
+    document.querySelectorAll('img[loading="lazy"]').forEach(img => {
+        img.src = img.dataset.src || img.src;
+    });
+} else {
+    // Fallback for browsers that don't support lazy loading
+    const lazyImages = document.querySelectorAll('img[loading="lazy"]');
+    const imageObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                img.src = img.dataset.src || img.src;
+                imageObserver.unobserve(img);
+            }
+        });
+    });
+    lazyImages.forEach(img => imageObserver.observe(img));
+}
+
 // Form submission handling
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('leadForm');

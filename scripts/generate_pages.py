@@ -123,6 +123,13 @@ def get_city_template(city_data):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2d7a3a">
+
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/css/main.css" as="style">
+    <link rel="preconnect" href="https://www.google-analytics.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+
     <title>Sod Installation {city}, {state_full} | Professional {primary_grass} Sod | Sod.Company</title>
     <meta name="description" content="Professional sod installation in {city}, {state_full}. {primary_grass}, {', '.join(grasses[:2])} sod starting at {avg_price}/sqft installed. Free quotes, same-week service. Call {phone}">
     <meta name="keywords" content="sod installation {city}, {primary_grass} sod {city}, lawn installation {city}, sod prices {city} {state}">
@@ -656,6 +663,19 @@ def generate_homepage():
 def generate_sitemap():
     """Generate XML sitemap"""
     urls = ['https://sod.company/']
+
+    # Add blog URLs
+    blog_posts = [
+        'blog/',
+        'blog/sod-vs-seed/',
+        'blog/how-much-does-sod-cost/',
+        'blog/best-time-to-install-sod/',
+        'blog/st-augustine-vs-bermuda/',
+        'blog/new-sod-care/',
+        'blog/prepare-yard-for-sod/'
+    ]
+    for post in blog_posts:
+        urls.append(f"https://sod.company/{post}")
 
     for city_data in cities:
         city_slug = city_data['city'].lower().replace(' ', '-').replace('.', '')
